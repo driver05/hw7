@@ -1,0 +1,14 @@
+1_halt_test.um.um
+2_output_test.um
+3_load_value_test.um
+4_cond_move_test.um
+5_nand_test.um
+6_add_test.um
+7_multiply_test.um
+8_divide_test.um
+9_input_test.um
+10_segment_store_test.um
+11_segment_load_test.um
+12_map_segment_test.um
+13_unmap_segment_test.um
+14_load_program_test.um

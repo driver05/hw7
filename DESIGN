@@ -1,0 +1,146 @@
+                                                                 Suarav Acharya
+                                                                       sachar01
+                                                               Daniel M. Rivers
+                                                                       driver05
+PURPOSE OF PROGRAM                                                     04/01/15
+===============================================================================
+This project simulates a virtual, universal machine in c.
+
+PROGRAM FILES
+===============================================================================
+Name                                                                   Purpose
+-------------------------------------------------------------------------------
+um.c                      Loads um file code into universal machine and runs it
+operate.c                        Implement um operations, interfacing with um.c 
+operate.h                                      Interface for the operate.c file 
+memory.c      Keeps track of and operates on memory and segments used by the um
+memory.h                                        Interface for the memory.c file 
+
+
+TEST FILES
+===============================================================================
+mem_tests.c                                 Unit test each function in memory.c
+
+
+ARCHITECTURE
+===============================================================================
+um.c represents the universal machine, and relies on the memory.h and operate.h
+interfaces. The memory.h allows the virtual machine to implement memory
+management methods like storing, getting, and allocating data. The virtual
+machine will use operations specified in operate.h to execute um instructions.
+This includes input and output, logical operations, and memory management.
+
+
+DATA STRUCTURES
+===============================================================================
+We implement various data structures in our program
+
+Virtual Memory
+------------------------------------------------------------------------------
+Our data structure for the virtual memory is a sequence of sequences (Hanson's 
+Seq_T), which we implement in our memory.c file. 
+
+The outer sequence represents the virtual memory the UM is using, which 
+contains all memory segments. This sequence is stored in a Mem_T incomplete 
+struct whose implementation is hidden to the client.
+
+The inner sequence represents a memory segment. Each element in the inner 
+sequence contains a pointer to a word represented by a uint32_t word.
+
+
+Words
+------------------------------------------------------------------------------
+The words in the program are stored as uint32_t's, which contain data or 
+subfields that store specific information needed to run operations. The fields
+are stored and retrieved using bitpack functions specified by bitpack.h.
+
+Each word contains four fields. The first field is four bits and specifies the
+operation to be run. The next three fields are three bits each and hold the
+values in register A, B and C respectively.
+
+
+INTERFACES
+===============================================================================
+
+Virtual Memory Interface: memory.h
+-------------------------------------------------------------------------------
+See memory.h for function declarations, descriptions, and contracts.
+
+Instruction Execution Interface: operate.h
+-------------------------------------------------------------------------------
+There will be functions for each operation with the exception of halt. Halt 
+simply causes the program to end the instruction call loop, and exit from the
+UM simulation.
+
+Each function in operate.c will take the operation code and the appropriate
+number of register variables as pointers. Operations do not return values, but
+may call fprintf and fscanf for I/O functionality, or memory.h to manage
+virtual memory. 
+
+
+TESTING
+===============================================================================
+We implement various tests and assertions to ensure proper programmatic
+function.
+
+The mem_tests.c file calls each function in the segment-management file
+memory.c. For each test, the program calls the function and ensures proper
+execution,The program outputs that the test fails or passes according to the
+results of each test.
+
+Tested function | Tests and invariants                 
+----------------|--------------------------------------------------------------
+Mem_new_zero    | The functions must successfully allocate space using malloc  
+Mem_new         | without producing a runtime error exception.
+----------------|--------------------------------------------------------------
+Mem_get         | The function must return the values as was put in
+                | the location by placement of the sequence in segment zero.
+                | This is tested for 1000 elements in segment 0.
+----------------|--------------------------------------------------------------
+Mem_set         | The function sets a known value in memory several hundred 
+                | times. Then, the same value is gotten, and compared to the
+                | original values.  
+----------------|--------------------------------------------------------------
+Map_segment     | The function is run, and once completed a value is put into
+                | the new segment. If this happens without error, the function
+                | passes.
+----------------|--------------------------------------------------------------
+Mem_unnmap_seg- | The function is unmaps a segment. This should not produce
+ment            | errors/exceptions. The test involves two additional lines  
+                | that set and get a value in the freed segment. The two lines 
+                | should produce a segmentation fault if uncommented.
+----------------|--------------------------------------------------------------
+Mem_free_all    | This function works by freeing the virtual memory. This
+                | should not produce errors/exceptions. The test involves an 
+                | additional line that maps a memory segment in the freed 
+                | virtual memory. The line should produce a segmentation fault 
+                | if uncommented.
+----------------|--------------------------------------------------------------
+   
+
+We will also extensively tested the UM using .um machine test code files. This 
+includes unit tests for each operation specified in operate.h. For complex .um 
+test files we create, we will programmatically compare the output of our UM 
+with the correct UM provided to us using the diff command.
+
+
+INVARIANTS
+===============================================================================
+After the .um file is read, segment 0 contains the instructions in that .um
+file.
+
+At the beginning of every operation call, the 32-bit program counter always
+points to the instruction being executed in segment 0.
+
+For any value that is stored in a segment at a given offset, calling Mem_get on
+that segment and offset will return that value.
+
+After mapping a segment with a specific size, the segment will contain that
+number of zero-filled elements.
+        > Therefore, at any given time, no mapped segments will have dead
+          squirrels.
+
+Testing Invariant
+-------------------------------------------------------------------------------
+Upon completion of the mem_test.c and op_test.c, all tests will print "test 
+passed".

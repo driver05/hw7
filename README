@@ -1,0 +1,209 @@
+                                                                 Suarav Acharya
+                                                                       sachar01
+                                                               Daniel M. Rivers
+                                                                       driver05
+ACKNOWLEDGEMENTS                                                       04/09/15
+===============================================================================
+Thanks for Peter and Margeret for their help as TA's. Otherwise our group
+worked independently.
+
+Time spent on analyzing the assignment:         5  hours
+Time spent on preparing the design:             11 hours
+Time spent on coding & solving problems:        19 hours
+
+
+IMPLEMENTATION
+===============================================================================
+We implemented a working emulator that reads a file with instructions in the
+um language specified in the comp40 um documentation. We also implemented code
+that tested each operation in the program separately. Other tests were written
+to test the um memory architecture.
+
+Our UM takes 56 seconds to run 50 million instructions. To determine this, we
+timed the execution time for a 50-million instruction .um program.
+
+
+ARCHITECTURE
+===============================================================================
+um.c represents the universal machine, and relies on the memory.h and operate.h
+interfaces.
+
+The operate.h interface includes the implementations for all UM operations.
+Since executing the operations requires access to the UM's internal states,
+the operate.h interface also defines the struct MState, which represents
+the UM's internal states, namely its registries, program counter and
+virtual memory.
+
+The memory.h abstraction represents the virtual memory used by the UM. It
+allows the virtual machine to implement memory management methods like storing,
+getting, and allocating data. The data structure representing the virtual
+memory is hidden from the client.
+
+
+DATA STRUCTURES
+===============================================================================
+We implement various data structures in our program
+
+Virtual Memory
+------------------------------------------------------------------------------
+Our data structure for the virtual memory is a sequence of sequences (Hanson's 
+Seq_T), which we implement in our memory.c file. 
+
+The outer sequence represents the virtual memory the UM is using, which 
+contains all memory segments. This sequence is stored in a Mem_T incomplete 
+struct whose implementation is hidden to the client.
+
+The inner sequence represents a memory segment. Each element in the inner 
+sequence contains a pointer to a word represented by a uint32_t word.
+
+Words
+------------------------------------------------------------------------------
+The words in the program are stored as uint32_t's, which contain data or 
+subfields that store specific information needed to run operations. The fields
+are stored and retrieved using bitpack functions specified by bitpack.h.
+
+Normally, each word contains four fields. The first field is four bits and 
+specifies the operation to be run. The next three fields are three bits each and
+hold the values in register A, B and C respectively. However, in the case of the
+load value operation there is still a field for an opcode but there is also a
+25 bit field for values to be stored directly into registers.
+
+
+UM UNIT INSTRUCTION TESTS
+===============================================================================
+We implement various tests in the machine language of the um.
+
+The mem_tests.c file calls each function in the segment-management file
+memory.c. For each test, the program calls the function and ensures proper
+execution,The program outputs that the test fails or passes according to the
+results of each test. Each test only relies on operations already tested by
+the tests above it. The exception is 
+
+Tested operation| Unit Test                 
+----------------|--------------------------------------------------------------
+Halt Test       | The test attempts to halt the program. If the program
+                | continues, it will print "F".
+                |
+Program Input   | No input
+Pass Output     | Successful tests produce no output   
+Fail Output     | Failed tests output "F" to the terminal
+----------------|--------------------------------------------------------------
+Output Test     | The test attempts to print "P" and halts.
+                |
+Program Input   | No input
+Pass Output     | Successful tests print "P" to the terminal   
+Fail Output     | Failed tests do not output "P".
+----------------|--------------------------------------------------------------
+Load Value Test | The test attempts to load "P" to a register and print that 
+                | register.
+                |
+Program Input   | No input
+Pass Output     | Successful tests print "P" to the terminal   
+Fail Output     | Failed tests do not output "P".
+----------------|--------------------------------------------------------------
+Conditional Move| The test loads "F" into register 4, and looks at a register
+                | with value zero. Because the value of the register is zero,
+                | this loads "P" into register 4 instead. Register 4 is
+                | outputted.
+                |
+Program Input   | No input
+Pass Output     | Successful tests print "P" to the terminal   
+Fail Output     | Failed tests print "F" to the terminal
+----------------|--------------------------------------------------------------
+Nand Test       | The nand tests bitwise nands 96 (binary 110000 with itself.
+                | Then 48 (11000) is nanded with itself. The output of both are
+                | nanded, producing the value 11010001 which is "p". That
+                | result is outputted.
+                |
+Program Input   | No input
+Pass Output     | Successful tests print "p" to the terminal   
+Fail Output     | Failed tests prints some other value
+----------------|--------------------------------------------------------------
+Add Test        | The add test finds the two's complement of the number 9 which
+                | is -10 and adds this value to 90. The output of this
+                | operation is outputted.
+                |
+Program Input   | No input
+Pass Output     | Successful tests print "P" to the terminal
+Fail Output     | Failed tests prints some other value
+----------------|--------------------------------------------------------------
+Multiply Test   | The multiply tests multiplies the numbers 8 and 10 and
+                | outputs the result.
+                |
+Program Input   | No input
+Pass Output     | Successful tests print "P" to the terminal   
+Fail Output     | Failed tests prints some other value
+----------------|--------------------------------------------------------------
+Divide Test     | The divide test divides the number 49 from 3920. This value
+                | (if correct, 80) is outputted.
+                |
+Program Input   | No input
+Pass Output     | Successful tests print "P" to the terminal   
+Fail Output     | Failed tests prints some other value
+----------------|--------------------------------------------------------------
+Input Test      | The input test waits for a value from input. when entered,
+                | this value is outputted.
+                |
+Program Input   | The character "P"
+Pass Output     | Successful tests print "P" to the terminal   
+Fail Output     | Failed tests prints some other value
+----------------|--------------------------------------------------------------
+Segment Store   | There are two halts in the .um program. The program stores
+                | the instruction that prints "P" over the first halt
+                | instruction in the 0 segment. If the store is successful,
+                | the program prints "P" instead of halting.
+                |
+Program Input   | No input
+Pass Output     | Successful tests print "P" to the terminal   
+Fail Output     | Failed tests prints some other value
+----------------|--------------------------------------------------------------
+Segment Load    | Stores the 80 (char "P") into memory (segment 0, offset 7),
+                | and loads the data in memory back to r0. Then it outputs the
+                | value in r0. 
+                |
+Program Input   | No input
+Pass Output     | Successful tests print "P" to the terminal   
+Fail Output     | Failed tests prints some other value
+----------------|--------------------------------------------------------------
+Map Segment     | Maps a new segment, stores "P" into that segment, loads
+                | the stored value into a different register, and prints it.
+                |
+Program Input   | No input
+Pass Output     | Successful tests print "P" to the terminal   
+Fail Output     | Failed tests prints some other value
+----------------|--------------------------------------------------------------
+Unmap Segment   | Maps two segments. Unmaps the first segment, remaps it and
+                | stores "P" into it. Unmaps the second segment, remaps it and
+                | stores "p" into it. Then, outputs the two letters stored in
+                | the two segments.
+                |
+Program Input   | No input
+Pass Output     | Successful tests print "Pp" to the terminal   
+Fail Output     | Failed tests prints some other value
+----------------|--------------------------------------------------------------
+Load Program    | Store the values of the instructions to output r1 and halt
+                | into a new segment. Then, load the new segment and execute
+                | its instructions at offset 0.
+                |
+Program Input   | No input
+Pass Output     | Successful tests print "Pp" to the terminal   
+Fail Output     | Failed tests prints some other value
+----------------|--------------------------------------------------------------
+
+
+INVARIANTS
+===============================================================================
+After the .um file is read, segment 0 contains the instructions in that .um
+file.
+
+At the beginning of every operation call, the 32-bit program counter always
+points to the instruction being executed in segment 0.
+
+For any value that is stored in a segment at a given offset, calling Mem_get on
+that segment and offset will return that value.
+
+After mapping a segment with a specific size, the segment will contain that
+number of zero-filled elements.
+        > Therefore, at any given time, no mapped segments will have "dead
+          squirrels".
+
